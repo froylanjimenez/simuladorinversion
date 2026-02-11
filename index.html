@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Portafolio Pro - Froylan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        .input-group label { @apply block text-xs font-bold text-gray-400 uppercase tracking-wide mb-1; }
+        .input-group input, .input-group select { @apply w-full bg-gray-700 text-white border border-gray-600 rounded px-3 py-2 focus:outline-none focus:border-blue-500 transition-colors; }
+    </style>
+</head>
+<body class="bg-gray-900 text-white font-sans min-h-screen p-4 md:p-8">
+
+    <div class="max-w-4xl mx-auto">
+        <header class="flex justify-between items-center mb-8 border-b border-gray-700 pb-4">
+            <div>
+                <h1 class="text-3xl font-bold text-blue-400">Simulador Pro</h1>
+                <p class="text-gray-400 text-sm">Proyección de Patrimonio y Dividendos</p>
+            </div>
+            <button onclick="generatePDF()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded shadow flex items-center gap-2 transition">
+                <i class="fa-solid fa-file-pdf"></i> PDF
+            </button>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <div class="lg:col-span-1 bg-gray-800 p-6 rounded-xl shadow-lg h-fit">
+                <h2 class="text-xl font-semibold mb-4 text-gray-200 border-l-4 border-blue-500 pl-2">Parámetros</h2>
+                
+                <div class="space-y-4">
+                    <div class="input-group">
+                        <label>Capital Inicial (USD)</label>
+                        <input type="number" id="initialCapital" value="5800">
+                    </div>
+
+                    <div class="input-group">
+                        <label>Aporte Mensual (USD)</label>
+                        <input type="number" id="monthlyContrib" value="300">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <div class="input-group">
+                            <label>Aporte Extra</label>
+                            <input type="number" id="extraContrib" value="1000">
+                        </div>
+                        <div class="input-group">
+                            <label>Frecuencia Extra</label>
+                            <select id="extraFreq">
+                                <option value="0">Ninguno</option>
+                                <option value="2">Bimensual</option>
+                                <option value="3">Trimestral</option>
+                                <option value="6">Semestral</option>
+                                <option value="12" selected>Anual</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="bg-gray-700/50 p-3 rounded border border-gray-600">
+                        <div class="flex items-center gap-2 mb-2">
+                            <input type="checkbox" id="dynamicContrib" class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500" checked>
+                            <label for="dynamicContrib" class="text-sm font-medium select-none cursor-pointer">Aumentar aportes anualmente</label>
+                        </div>
+                        <div class="input-group" id="increaseGroup">
+                            <label>Tasa de Aumento (%)</label>
+                            <input type="number" id="contribIncreaseRate" value="5" placeholder="Ej: Inflación">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <div class="input-group">
+                            <label>Crecimiento Anual (%)</label>
+                            <input type="number" id="priceAppreciation" value="8" step="0.1" title="Apreciación del precio de la acción/ETF">
+                        </div>
+                        <div class="input-group">
+                            <label>Dividend Yield (%)</label>
+                            <input type="number" id="dividendYield" value="2.5" step="0.1">
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2 mb-2">
+                        <input type="checkbox" id="reinvestDivs" class="w-4 h-4 text-green-500 rounded focus:ring-green-500" checked>
+                        <label for="reinvestDivs" class="text-sm text-gray-300 select-none cursor-pointer">Reinvertir Dividendos</label>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Duración (Años)</label>
+                        <input type="number" id="years" value="15">
+                    </div>
+
+                    <button onclick="calculate()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg shadow-lg transition transform active:scale-95 mt-4">
+                        CALCULAR PROYECCIÓN
+                    </button>
+                </div>
+            </div>
+
+            <div class="lg:col-span-2 space-y-6">
+                
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    <div class="bg-gray-800 p-4 rounded-lg border-t-4 border-blue-500">
+                        <p class="text-gray-400 text-xs uppercase">Valor Final Portafolio</p>
+                        <p class="text-xl md:text-2xl font-bold text-white" id="resFinalValue">$0</p>
+                    </div>
+                    <div class="bg-gray-800 p-4 rounded-lg border-t-4 border-green-500">
+                        <p class="text-gray-400 text-xs uppercase">Dividendo Anual (Final)</p>
+                        <p class="text-xl md:text-2xl font-bold text-green-400" id="resAnnualDiv">$0</p>
+                    </div>
+                    <div class="bg-gray-800 p-4 rounded-lg border-t-4 border-purple-500">
+                        <p class="text-gray-400 text-xs uppercase">Total Aportado</p>
+                        <p class="text-xl md:text-2xl font-bold text-purple-300" id="resTotalInvested">$0</p>
+                    </div>
+                </div>
+
+                <div class="bg-gray-800 p-4 rounded-xl shadow-lg">
+                    <h3 class="text-sm text-gray-400 mb-4">Comparativa de Rendimiento</h3>
+                    <div class="h-64 md:h-80 w-full relative">
+                        <canvas id="growthChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+                    <div class="p-4 border-b border-gray-700 flex justify-between items-center">
+                        <h3 class="font-bold text-gray-200">Desglose Anual</h3>
+                        <span class="text-xs text-gray-500">*Detalle completo en PDF</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left text-gray-400">
+                            <thead class="text-xs text-gray-400 uppercase bg-gray-700">
+                                <tr>
+                                    <th class="px-4 py-3">Año</th>
+                                    <th class="px-4 py-3">Aportado</th>
+                                    <th class="px-4 py-3">Portafolio</th>
+                                    <th class="px-4 py-3 text-right">Dividendos</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableBody">
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let myChart;
+        let simulationData = []; // Para guardar datos globales para el PDF
+
+        // Formateador de Moneda
+        const USD = new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD',
+            maximumFractionDigits: 0
+        });
+
+        function calculate() {
+            // 1. Obtener inputs
+            let principal = parseFloat(document.getElementById('initialCapital').value) || 0;
+            let monthly = parseFloat(document.getElementById('monthlyContrib').value) || 0;
+            
+            let extraAmount = parseFloat(document.getElementById('extraContrib').value) || 0;
+            let extraFreq = parseInt(document.getElementById('extraFreq').value); // Meses entre pagos (12 = anual)
+            
+            let increaseActive = document.getElementById('dynamicContrib').checked;
+            let increaseRate = (parseFloat(document.getElementById('contribIncreaseRate').value) || 0) / 100;
+            
+            let priceAppreciation = (parseFloat(document.getElementById('priceAppreciation').value) || 0) / 100;
+            let divYield = (parseFloat(document.getElementById('dividendYield').value) || 0) / 100;
+            let reinvest = document.getElementById('reinvestDivs').checked;
+            
+            let years = parseInt(document.getElementById('years').value) || 10;
+
+            // Arrays para gráfica y tabla
+            let labels = [];
+            let portfolioCurve = [];
+            let investedCurve = [];
+            let spyCurve = []; // Benchmark S&P 500 (~10%)
+            let safeCurve = []; // Benchmark Renta Fija (~5%)
+            let dividendData = []; // Solo para tabla/PDF
+
+            // Variables temporales de simulación
+            let currentBalance = principal;
+            let totalInvested = principal;
+            
+            // Benchmarks
+            let spyBalance = principal;
+            let safeBalance = principal;
+
+            // Loop mensual para precisión
+            let months = years * 12;
+            let currentYear = 1;
+
+            for (let m = 1; m <= months; m++) {
+                
+                // 1. Rendimiento del Mercado (Apreciación de precio mensual)
+                let monthlyAppreciation = priceAppreciation / 12;
+                currentBalance = currentBalance * (1 + monthlyAppreciation);
+                
+                // 2. Dividendos (Calculados sobre saldo actual)
+                let monthlyDivRate = divYield / 12;
+                let monthDividend = currentBalance * monthlyDivRate;
+                
+                // Si reinvierte, se suma al capital; si no, se queda como flujo de caja
+                if (reinvest) {
+                    currentBalance += monthDividend;
+                }
+
+                // 3. Aportes Mensuales
+                currentBalance += monthly;
+                totalInvested += monthly;
+                
+                // Benchmarks (simplificados: interés compuesto mensual + aporte mensual)
+                spyBalance = (spyBalance * (1 + 0.10/12)) + monthly;
+                safeBalance = (safeBalance * (1 + 0.05/12)) + monthly;
+
+                // 4. Aportes Extras
+                if (extraFreq > 0 && m % extraFreq === 0) {
+                    currentBalance += extraAmount;
+                    totalInvested += extraAmount;
+                    spyBalance += extraAmount;
+                    safeBalance += extraAmount;
+                }
+
+                // 5. Fin de año (Incremento de aportes y registro de datos)
+                if (m % 12 === 0) {
+                    labels.push(`Año ${currentYear}`);
+                    
+                    // Guardar datos para tabla/gráfica
+                    portfolioCurve.push(currentBalance);
+                    investedCurve.push(totalInvested);
+                    spyCurve.push(spyBalance);
+                    safeCurve.push(safeBalance);
+                    
+                    // Calculamos dividendo anualizado proyectado para mostrar
+                    let annualDiv = currentBalance * divYield;
+                    dividendData.push(annualDiv);
+
+                    // Aplicar incremento de aportes si está activo
+                    if (increaseActive) {
+                        monthly = monthly * (1 + increaseRate);
+                        extraAmount = extraAmount * (1 + increaseRate);
+                    }
+
+                    currentYear++;
+                }
+            }
+
+            // Guardar datos globales para PDF
+            simulationData = {
+                labels, portfolioCurve, investedCurve, dividendData,
+                finalInvested: totalInvested,
+                finalValue: currentBalance,
+                finalDiv: currentBalance * divYield
+            };
+
+            // Actualizar UI
+            document.getElementById('resFinalValue').innerText = USD.format(currentBalance);
+            document.getElementById('resTotalInvested').innerText = USD.format(totalInvested);
+            document.getElementById('resAnnualDiv').innerText = USD.format(currentBalance * divYield);
+
+            updateTable(labels, investedCurve, portfolioCurve, dividendData);
+            updateChart(labels, portfolioCurve, spyCurve, safeCurve);
+        }
+
+        function updateTable(years, invested, portfolio, dividends) {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            
+            // Mostrar máximo los primeros 15 años y el último para no saturar móvil
+            years.forEach((year, index) => {
+                // Lógica simple de visualización (mostrar todos si son pocos, o resumen si son muchos)
+                let row = `
+                    <tr class="border-b border-gray-700 hover:bg-gray-750">
+                        <td class="px-4 py-3 font-medium text-white">${year}</td>
+                        <td class="px-4 py-3">${USD.format(invested[index])}</td>
+                        <td class="px-4 py-3 text-blue-300 font-bold">${USD.format(portfolio[index])}</td>
+                        <td class="px-4 py-3 text-right text-green-400">${USD.format(dividends[index])}</td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+        }
+
+        function updateChart(labels, userCurve, spyCurve, safeCurve) {
+            const ctx = document.getElementById('growthChart').getContext('2d');
+            
+            if (myChart) myChart.destroy();
+
+            myChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Tu Estrategia',
+                            data: userCurve,
+                            borderColor: '#3b82f6', // blue-500
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.3
+                        },
+                        {
+                            label: 'S&P 500 (Hist. 10%)',
+                            data: spyCurve,
+                            borderColor: '#9ca3af', // gray-400
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            fill: false,
+                            tension: 0.3,
+                            pointRadius: 0
+                        },
+                        {
+                            label: 'Renta Fija (5%)',
+                            data: safeCurve,
+                            borderColor: '#ef4444', // red-500
+                            borderWidth: 1,
+                            borderDash: [2, 2],
+                            fill: false,
+                            tension: 0.3,
+                            pointRadius: 0
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: { position: 'bottom', labels: { color: '#9ca3af' } },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + USD.format(context.raw);
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            ticks: { color: '#9ca3af', callback: (value) => '$' + value / 1000 + 'k' },
+                            grid: { color: '#374151' }
+                        },
+                        x: {
+                            ticks: { color: '#9ca3af', maxRotation: 45, minRotation: 45 },
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Generar PDF con jsPDF
+        async function generatePDF() {
+            if(simulationData.labels.length === 0) calculate(); // Asegurar datos
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            // Título
+            doc.setFontSize(22);
+            doc.setTextColor(41, 128, 185); // Azul
+            doc.text("Reporte de Proyección Financiera", 14, 20);
+
+            doc.setFontSize(10);
+            doc.setTextColor(100);
+            doc.text(`Generado el: ${new Date().toLocaleDateString()}`, 14, 26);
+
+            // Resumen Ejecutivo
+            doc.setFillColor(240, 240, 240);
+            doc.rect(14, 35, 180, 25, 'F');
+            
+            doc.setFontSize(12);
+            doc.setTextColor(0);
+            doc.text("Resumen de Estrategia:", 20, 45);
+            
+            doc.setFontSize(10);
+            doc.text(`Aporte Mensual Ini: ${USD.format(document.getElementById('monthlyContrib').value)}`, 20, 52);
+            doc.text(`Aporte Extra Ini: ${USD.format(document.getElementById('extraContrib').value)}`, 80, 52);
+            doc.text(`Duración: ${document.getElementById('years').value} años`, 140, 52);
+
+            // Resultados Finales destacados
+            doc.setFontSize(14);
+            doc.setTextColor(39, 174, 96); // Verde
+            doc.text(`Valor Final: ${USD.format(simulationData.finalValue)}`, 20, 75);
+            doc.setTextColor(192, 57, 43); // Rojo oscuro
+            doc.text(`Total Invertido: ${USD.format(simulationData.finalInvested)}`, 110, 75);
+
+            // Tabla de Datos
+            let tableRows = simulationData.labels.map((year, i) => [
+                year,
+                USD.format(simulationData.investedCurve[i]),
+                USD.format(simulationData.portfolioCurve[i]),
+                USD.format(simulationData.dividendData[i])
+            ]);
+
+            doc.autoTable({
+                startY: 85,
+                head: [['Año', 'Capital Invertido', 'Valor Portafolio', 'Dividendos (Anual)']],
+                body: tableRows,
+                theme: 'striped',
+                headStyles: { fillColor: [41, 128, 185] },
+                styles: { fontSize: 10, cellPadding: 3 },
+                columnStyles: {
+                    0: { fontStyle: 'bold' },
+                    2: { fontStyle: 'bold', textColor: [39, 174, 96] }
+                }
+            });
+
+            // Pie de página
+            const pageCount = doc.internal.getNumberOfPages();
+            for(let i = 1; i <= pageCount; i++) {
+                doc.setPage(i);
+                doc.setFontSize(8);
+                doc.setTextColor(150);
+                doc.text('Simulador Personal de Froylan - Creado con GitHub Pages', 105, 290, null, null, "center");
+            }
+
+            // Descargar
+            doc.save('Proyeccion_Inversion_Froylan.pdf');
+        }
+
+        // Inicializar
+        calculate();
+
+        // Escuchar cambios en checkbox para mostrar/ocultar input de incremento
+        document.getElementById('dynamicContrib').addEventListener('change', function() {
+            const group = document.getElementById('increaseGroup');
+            if(this.checked) {
+                group.classList.remove('opacity-50', 'pointer-events-none');
+            } else {
+                group.classList.add('opacity-50', 'pointer-events-none');
+            }
+        });
+
+    </script>
+</body>
+</html>
