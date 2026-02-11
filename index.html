@@ -3,55 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulador de Portafolio Pro - Froylan</title>
+    <title>Simulador Pro - Froylan</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
+    
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
-        .input-group label { @apply block text-xs font-bold text-gray-400 uppercase tracking-wide mb-1; }
-        .input-group input, .input-group select { @apply w-full bg-gray-700 text-white border border-gray-600 rounded px-3 py-2 focus:outline-none focus:border-blue-500 transition-colors; }
+        /* Estilos base para etiquetas */
+        .input-label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #9ca3af; /* gray-400 */
+            text-transform: uppercase;
+            margin-bottom: 0.25rem;
+        }
+        
+        /* CORRECCIÓN PRINCIPAL: Inputs con fondo blanco y texto negro */
+        .input-field {
+            width: 100%;
+            background-color: #ffffff; /* Fondo blanco */
+            color: #111827; /* Texto casi negro */
+            border: 1px solid #d1d5db; /* Borde gris claro */
+            border-radius: 0.375rem;
+            padding: 0.5rem 0.75rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        
+        .input-field:focus {
+            border-color: #3b82f6; /* Azul al enfocar */
+            ring: 2px solid #3b82f6;
+        }
     </style>
 </head>
 <body class="bg-gray-900 text-white font-sans min-h-screen p-4 md:p-8">
 
     <div class="max-w-4xl mx-auto">
-        <header class="flex justify-between items-center mb-8 border-b border-gray-700 pb-4">
+        <header class="flex justify-between items-center mb-6 border-b border-gray-700 pb-4">
             <div>
-                <h1 class="text-3xl font-bold text-blue-400">Simulador Pro</h1>
-                <p class="text-gray-400 text-sm">Proyección de Patrimonio y Dividendos</p>
+                <h1 class="text-2xl md:text-3xl font-bold text-blue-400">Simulador Pro</h1>
+                <p class="text-gray-400 text-xs md:text-sm">Proyección de Patrimonio</p>
             </div>
-            <button onclick="generatePDF()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded shadow flex items-center gap-2 transition">
-                <i class="fa-solid fa-file-pdf"></i> PDF
+            <button onclick="generatePDF()" class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded shadow flex items-center gap-2 transition text-sm font-bold">
+                <i class="fa-solid fa-file-pdf"></i> Guardar PDF
             </button>
         </header>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             
-            <div class="lg:col-span-1 bg-gray-800 p-6 rounded-xl shadow-lg h-fit">
-                <h2 class="text-xl font-semibold mb-4 text-gray-200 border-l-4 border-blue-500 pl-2">Parámetros</h2>
+            <div class="lg:col-span-1 bg-gray-800 p-5 rounded-xl shadow-lg h-fit">
+                <h2 class="text-lg font-semibold mb-4 text-gray-200 border-l-4 border-blue-500 pl-2">Configuración</h2>
                 
-                <div class="space-y-4">
-                    <div class="input-group">
-                        <label>Capital Inicial (USD)</label>
-                        <input type="number" id="initialCapital" value="5800">
+                <form id="simForm" onsubmit="event.preventDefault(); calculate();" class="space-y-4">
+                    
+                    <div>
+                        <label class="input-label">Capital Inicial (USD)</label>
+                        <input type="number" id="initialCapital" class="input-field" value="5800">
                     </div>
 
-                    <div class="input-group">
-                        <label>Aporte Mensual (USD)</label>
-                        <input type="number" id="monthlyContrib" value="300">
+                    <div>
+                        <label class="input-label">Aporte Mensual (USD)</label>
+                        <input type="number" id="monthlyContrib" class="input-field" value="300">
                     </div>
 
-                    <div class="grid grid-cols-2 gap-2">
-                        <div class="input-group">
-                            <label>Aporte Extra</label>
-                            <input type="number" id="extraContrib" value="1000">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="input-label">Aporte Extra</label>
+                            <input type="number" id="extraContrib" class="input-field" value="1000">
                         </div>
-                        <div class="input-group">
-                            <label>Frecuencia Extra</label>
-                            <select id="extraFreq">
+                        <div>
+                            <label class="input-label">Frecuencia</label>
+                            <select id="extraFreq" class="input-field cursor-pointer">
                                 <option value="0">Ninguno</option>
                                 <option value="2">Bimensual</option>
                                 <option value="3">Trimestral</option>
@@ -61,165 +89,170 @@
                         </div>
                     </div>
 
-                    <div class="bg-gray-700/50 p-3 rounded border border-gray-600">
+                    <div class="bg-gray-700/30 p-3 rounded border border-gray-600">
                         <div class="flex items-center gap-2 mb-2">
-                            <input type="checkbox" id="dynamicContrib" class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500" checked>
-                            <label for="dynamicContrib" class="text-sm font-medium select-none cursor-pointer">Aumentar aportes anualmente</label>
+                            <input type="checkbox" id="dynamicContrib" class="w-4 h-4" checked onchange="toggleIncrease()">
+                            <label for="dynamicContrib" class="text-sm text-gray-200 cursor-pointer select-none">Aumentar aportes cada año</label>
                         </div>
-                        <div class="input-group" id="increaseGroup">
-                            <label>Tasa de Aumento (%)</label>
-                            <input type="number" id="contribIncreaseRate" value="5" placeholder="Ej: Inflación">
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-2">
-                        <div class="input-group">
-                            <label>Crecimiento Anual (%)</label>
-                            <input type="number" id="priceAppreciation" value="8" step="0.1" title="Apreciación del precio de la acción/ETF">
-                        </div>
-                        <div class="input-group">
-                            <label>Dividend Yield (%)</label>
-                            <input type="number" id="dividendYield" value="2.5" step="0.1">
+                        <div id="increaseGroup">
+                            <label class="input-label">Tasa de Aumento (%)</label>
+                            <input type="number" id="contribIncreaseRate" class="input-field" value="5">
                         </div>
                     </div>
 
-                    <div class="flex items-center gap-2 mb-2">
-                        <input type="checkbox" id="reinvestDivs" class="w-4 h-4 text-green-500 rounded focus:ring-green-500" checked>
-                        <label for="reinvestDivs" class="text-sm text-gray-300 select-none cursor-pointer">Reinvertir Dividendos</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="input-label">Crecimiento (%)</label>
+                            <input type="number" id="priceAppreciation" class="input-field" value="8" step="0.1">
+                        </div>
+                        <div>
+                            <label class="input-label">Dividend Yield (%)</label>
+                            <input type="number" id="dividendYield" class="input-field" value="2.5" step="0.1">
+                        </div>
                     </div>
 
-                    <div class="input-group">
-                        <label>Duración (Años)</label>
-                        <input type="number" id="years" value="15">
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" id="reinvestDivs" class="w-4 h-4 text-green-500 rounded" checked>
+                        <label for="reinvestDivs" class="text-sm text-gray-300 cursor-pointer select-none">Reinvertir Dividendos</label>
                     </div>
 
-                    <button onclick="calculate()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg shadow-lg transition transform active:scale-95 mt-4">
-                        CALCULAR PROYECCIÓN
+                    <div>
+                        <label class="input-label">Duración (Años)</label>
+                        <input type="number" id="years" class="input-field" value="15">
+                    </div>
+
+                    <button type="button" onclick="calculate()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg shadow-lg transition active:scale-95 mt-2">
+                        CALCULAR AHORA
                     </button>
-                </div>
+                </form>
             </div>
 
             <div class="lg:col-span-2 space-y-6">
                 
-                <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    <div class="bg-gray-800 p-4 rounded-lg border-t-4 border-blue-500">
-                        <p class="text-gray-400 text-xs uppercase">Valor Final Portafolio</p>
-                        <p class="text-xl md:text-2xl font-bold text-white" id="resFinalValue">$0</p>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="bg-gray-800 p-4 rounded-lg border-t-4 border-blue-500 shadow">
+                        <p class="text-gray-400 text-xs uppercase font-bold">Valor Final</p>
+                        <p class="text-2xl font-bold text-white mt-1" id="resFinalValue">$0</p>
                     </div>
-                    <div class="bg-gray-800 p-4 rounded-lg border-t-4 border-green-500">
-                        <p class="text-gray-400 text-xs uppercase">Dividendo Anual (Final)</p>
-                        <p class="text-xl md:text-2xl font-bold text-green-400" id="resAnnualDiv">$0</p>
+                    <div class="bg-gray-800 p-4 rounded-lg border-t-4 border-green-500 shadow">
+                        <p class="text-gray-400 text-xs uppercase font-bold">Dividendo Anual</p>
+                        <p class="text-2xl font-bold text-green-400 mt-1" id="resAnnualDiv">$0</p>
                     </div>
-                    <div class="bg-gray-800 p-4 rounded-lg border-t-4 border-purple-500">
-                        <p class="text-gray-400 text-xs uppercase">Total Aportado</p>
-                        <p class="text-xl md:text-2xl font-bold text-purple-300" id="resTotalInvested">$0</p>
+                    <div class="bg-gray-800 p-4 rounded-lg border-t-4 border-purple-500 shadow">
+                        <p class="text-gray-400 text-xs uppercase font-bold">Total Aportado</p>
+                        <p class="text-2xl font-bold text-purple-300 mt-1" id="resTotalInvested">$0</p>
                     </div>
                 </div>
 
-                <div class="bg-gray-800 p-4 rounded-xl shadow-lg">
-                    <h3 class="text-sm text-gray-400 mb-4">Comparativa de Rendimiento</h3>
+                <div class="bg-gray-800 p-4 rounded-xl shadow-lg border border-gray-700">
                     <div class="h-64 md:h-80 w-full relative">
                         <canvas id="growthChart"></canvas>
                     </div>
                 </div>
 
-                <div class="bg-gray-800 rounded-xl shadow-lg overflow-hidden">
-                    <div class="p-4 border-b border-gray-700 flex justify-between items-center">
-                        <h3 class="font-bold text-gray-200">Desglose Anual</h3>
-                        <span class="text-xs text-gray-500">*Detalle completo en PDF</span>
+                <div class="bg-gray-800 rounded-xl shadow-lg overflow-hidden border border-gray-700">
+                    <div class="p-3 bg-gray-700/50 border-b border-gray-600 flex justify-between items-center">
+                        <span class="font-bold text-sm text-gray-200">Desglose (Primeros y últimos años)</span>
+                        <span class="text-xs text-gray-500 italic">*Ver todo en PDF</span>
                     </div>
                     <div class="overflow-x-auto">
-                        <table class="w-full text-sm text-left text-gray-400">
+                        <table class="w-full text-sm text-left text-gray-300">
                             <thead class="text-xs text-gray-400 uppercase bg-gray-700">
                                 <tr>
                                     <th class="px-4 py-3">Año</th>
                                     <th class="px-4 py-3">Aportado</th>
-                                    <th class="px-4 py-3">Portafolio</th>
+                                    <th class="px-4 py-3">Valor Total</th>
                                     <th class="px-4 py-3 text-right">Dividendos</th>
                                 </tr>
                             </thead>
-                            <tbody id="tableBody">
+                            <tbody id="tableBody" class="divide-y divide-gray-700">
                                 </tbody>
                         </table>
                     </div>
                 </div>
-
             </div>
         </div>
     </div>
 
     <script>
-        let myChart;
-        let simulationData = []; // Para guardar datos globales para el PDF
+        let myChart = null;
+        let simulationData = {};
 
-        // Formateador de Moneda
+        // Formateador de moneda seguro
         const USD = new Intl.NumberFormat('en-US', {
             style: 'currency',
             currency: 'USD',
             maximumFractionDigits: 0
         });
 
+        // Función auxiliar para visibilidad del input de incremento
+        function toggleIncrease() {
+            const check = document.getElementById('dynamicContrib');
+            const group = document.getElementById('increaseGroup');
+            if(check.checked) {
+                group.style.opacity = "1";
+                group.style.pointerEvents = "auto";
+            } else {
+                group.style.opacity = "0.5";
+                group.style.pointerEvents = "none";
+            }
+        }
+
+        // Lógica Principal
         function calculate() {
-            // 1. Obtener inputs
-            let principal = parseFloat(document.getElementById('initialCapital').value) || 0;
-            let monthly = parseFloat(document.getElementById('monthlyContrib').value) || 0;
+            console.log("Iniciando cálculo..."); // Debug en consola
+
+            // 1. Obtener valores (con valores por defecto seguros)
+            const getVal = (id) => parseFloat(document.getElementById(id).value) || 0;
             
-            let extraAmount = parseFloat(document.getElementById('extraContrib').value) || 0;
-            let extraFreq = parseInt(document.getElementById('extraFreq').value); // Meses entre pagos (12 = anual)
+            let principal = getVal('initialCapital');
+            let monthly = getVal('monthlyContrib');
+            let extraAmount = getVal('extraContrib');
+            let extraFreq = parseInt(document.getElementById('extraFreq').value);
             
             let increaseActive = document.getElementById('dynamicContrib').checked;
-            let increaseRate = (parseFloat(document.getElementById('contribIncreaseRate').value) || 0) / 100;
+            let increaseRate = getVal('contribIncreaseRate') / 100;
             
-            let priceAppreciation = (parseFloat(document.getElementById('priceAppreciation').value) || 0) / 100;
-            let divYield = (parseFloat(document.getElementById('dividendYield').value) || 0) / 100;
+            let priceAppreciation = getVal('priceAppreciation') / 100;
+            let divYield = getVal('dividendYield') / 100;
             let reinvest = document.getElementById('reinvestDivs').checked;
-            
-            let years = parseInt(document.getElementById('years').value) || 10;
+            let years = parseInt(document.getElementById('years').value) || 1;
 
-            // Arrays para gráfica y tabla
+            // Arrays
             let labels = [];
             let portfolioCurve = [];
             let investedCurve = [];
-            let spyCurve = []; // Benchmark S&P 500 (~10%)
-            let safeCurve = []; // Benchmark Renta Fija (~5%)
-            let dividendData = []; // Solo para tabla/PDF
+            let spyCurve = [];
+            let safeCurve = [];
+            let dividendData = [];
 
-            // Variables temporales de simulación
+            // Variables de estado
             let currentBalance = principal;
             let totalInvested = principal;
-            
-            // Benchmarks
             let spyBalance = principal;
             let safeBalance = principal;
 
-            // Loop mensual para precisión
             let months = years * 12;
             let currentYear = 1;
 
+            // Bucle mes a mes
             for (let m = 1; m <= months; m++) {
+                // Interés mensual
+                currentBalance *= (1 + priceAppreciation/12);
                 
-                // 1. Rendimiento del Mercado (Apreciación de precio mensual)
-                let monthlyAppreciation = priceAppreciation / 12;
-                currentBalance = currentBalance * (1 + monthlyAppreciation);
-                
-                // 2. Dividendos (Calculados sobre saldo actual)
-                let monthlyDivRate = divYield / 12;
-                let monthDividend = currentBalance * monthlyDivRate;
-                
-                // Si reinvierte, se suma al capital; si no, se queda como flujo de caja
-                if (reinvest) {
-                    currentBalance += monthDividend;
-                }
+                // Dividendos
+                let monthlyDiv = currentBalance * (divYield/12);
+                if (reinvest) currentBalance += monthlyDiv;
 
-                // 3. Aportes Mensuales
+                // Aportes
                 currentBalance += monthly;
                 totalInvested += monthly;
                 
-                // Benchmarks (simplificados: interés compuesto mensual + aporte mensual)
+                // Benchmarks
                 spyBalance = (spyBalance * (1 + 0.10/12)) + monthly;
                 safeBalance = (safeBalance * (1 + 0.05/12)) + monthly;
 
-                // 4. Aportes Extras
+                // Aporte Extra
                 if (extraFreq > 0 && m % extraFreq === 0) {
                     currentBalance += extraAmount;
                     totalInvested += extraAmount;
@@ -227,67 +260,66 @@
                     safeBalance += extraAmount;
                 }
 
-                // 5. Fin de año (Incremento de aportes y registro de datos)
+                // Cierre de Año
                 if (m % 12 === 0) {
                     labels.push(`Año ${currentYear}`);
-                    
-                    // Guardar datos para tabla/gráfica
                     portfolioCurve.push(currentBalance);
                     investedCurve.push(totalInvested);
                     spyCurve.push(spyBalance);
                     safeCurve.push(safeBalance);
-                    
-                    // Calculamos dividendo anualizado proyectado para mostrar
-                    let annualDiv = currentBalance * divYield;
-                    dividendData.push(annualDiv);
+                    dividendData.push(currentBalance * divYield); // Div proyectado anual
 
-                    // Aplicar incremento de aportes si está activo
+                    // Incremento anual de aportes
                     if (increaseActive) {
-                        monthly = monthly * (1 + increaseRate);
-                        extraAmount = extraAmount * (1 + increaseRate);
+                        monthly *= (1 + increaseRate);
+                        extraAmount *= (1 + increaseRate);
                     }
-
                     currentYear++;
                 }
             }
 
-            // Guardar datos globales para PDF
+            // Guardar datos globales
             simulationData = {
                 labels, portfolioCurve, investedCurve, dividendData,
-                finalInvested: totalInvested,
                 finalValue: currentBalance,
-                finalDiv: currentBalance * divYield
+                finalInvested: totalInvested
             };
 
-            // Actualizar UI
+            // Actualizar DOM Texto
             document.getElementById('resFinalValue').innerText = USD.format(currentBalance);
             document.getElementById('resTotalInvested').innerText = USD.format(totalInvested);
             document.getElementById('resAnnualDiv').innerText = USD.format(currentBalance * divYield);
 
-            updateTable(labels, investedCurve, portfolioCurve, dividendData);
-            updateChart(labels, portfolioCurve, spyCurve, safeCurve);
+            // Actualizar Tabla y Gráfico
+            renderTable(labels, investedCurve, portfolioCurve, dividendData);
+            renderChart(labels, portfolioCurve, spyCurve, safeCurve);
         }
 
-        function updateTable(years, invested, portfolio, dividends) {
+        function renderTable(labels, invested, portfolio, dividends) {
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '';
             
-            // Mostrar máximo los primeros 15 años y el último para no saturar móvil
-            years.forEach((year, index) => {
-                // Lógica simple de visualización (mostrar todos si son pocos, o resumen si son muchos)
+            // Mostrar solo primeros 3 años, intermedios y ultimos 3 si es muy largo
+            let indicesToShow = new Set([0, 1, 2, labels.length-1, labels.length-2, labels.length-3]);
+            // Agregar algunos intermedios
+            if(labels.length > 10) indicesToShow.add(Math.floor(labels.length/2));
+
+            labels.forEach((label, i) => {
+                if (!indicesToShow.has(i) && labels.length > 15) return; // Saltar para no saturar si es muy largo
+
                 let row = `
-                    <tr class="border-b border-gray-700 hover:bg-gray-750">
-                        <td class="px-4 py-3 font-medium text-white">${year}</td>
-                        <td class="px-4 py-3">${USD.format(invested[index])}</td>
-                        <td class="px-4 py-3 text-blue-300 font-bold">${USD.format(portfolio[index])}</td>
-                        <td class="px-4 py-3 text-right text-green-400">${USD.format(dividends[index])}</td>
+                    <tr class="hover:bg-gray-700 transition-colors">
+                        <td class="px-4 py-3 font-medium text-white">${label}</td>
+                        <td class="px-4 py-3 text-gray-400">${USD.format(invested[i])}</td>
+                        <td class="px-4 py-3 text-blue-300 font-bold">${USD.format(portfolio[i])}</td>
+                        <td class="px-4 py-3 text-right text-green-400 font-mono">${USD.format(dividends[i])}</td>
                     </tr>
                 `;
                 tbody.innerHTML += row;
             });
         }
 
-        function updateChart(labels, userCurve, spyCurve, safeCurve) {
+        function renderChart(labels, user, spy, safe) {
             const ctx = document.getElementById('growthChart').getContext('2d');
             
             if (myChart) myChart.destroy();
@@ -298,33 +330,22 @@
                     labels: labels,
                     datasets: [
                         {
-                            label: 'Tu Estrategia',
-                            data: userCurve,
-                            borderColor: '#3b82f6', // blue-500
-                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            label: 'Tu Portafolio',
+                            data: user,
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.15)',
                             borderWidth: 3,
                             fill: true,
                             tension: 0.3
                         },
                         {
-                            label: 'S&P 500 (Hist. 10%)',
-                            data: spyCurve,
-                            borderColor: '#9ca3af', // gray-400
+                            label: 'S&P 500 (10%)',
+                            data: spy,
+                            borderColor: '#9ca3af',
                             borderWidth: 2,
                             borderDash: [5, 5],
-                            fill: false,
-                            tension: 0.3,
-                            pointRadius: 0
-                        },
-                        {
-                            label: 'Renta Fija (5%)',
-                            data: safeCurve,
-                            borderColor: '#ef4444', // red-500
-                            borderWidth: 1,
-                            borderDash: [2, 2],
-                            fill: false,
-                            tension: 0.3,
-                            pointRadius: 0
+                            pointRadius: 0,
+                            tension: 0.3
                         }
                     ]
                 },
@@ -333,112 +354,78 @@
                     maintainAspectRatio: false,
                     interaction: { mode: 'index', intersect: false },
                     plugins: {
-                        legend: { position: 'bottom', labels: { color: '#9ca3af' } },
+                        legend: { position: 'bottom', labels: { color: '#e5e7eb' } },
                         tooltip: {
+                            backgroundColor: 'rgba(17, 24, 39, 0.9)',
+                            titleColor: '#fff',
+                            bodyColor: '#e5e7eb',
+                            borderColor: '#374151',
+                            borderWidth: 1,
                             callbacks: {
-                                label: function(context) {
-                                    return context.dataset.label + ': ' + USD.format(context.raw);
-                                }
+                                label: (c) => ` ${c.dataset.label}: ${USD.format(c.raw)}`
                             }
                         }
                     },
                     scales: {
                         y: {
-                            ticks: { color: '#9ca3af', callback: (value) => '$' + value / 1000 + 'k' },
-                            grid: { color: '#374151' }
+                            grid: { color: '#374151' },
+                            ticks: { color: '#9ca3af', callback: v => '$' + v/1000 + 'k' }
                         },
                         x: {
-                            ticks: { color: '#9ca3af', maxRotation: 45, minRotation: 45 },
-                            grid: { display: false }
+                            grid: { display: false },
+                            ticks: { color: '#9ca3af' }
                         }
                     }
                 }
             });
         }
 
-        // Generar PDF con jsPDF
+        // Generador PDF
         async function generatePDF() {
-            if(simulationData.labels.length === 0) calculate(); // Asegurar datos
-
+            if (!simulationData.labels) calculate();
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
 
-            // Título
+            // Encabezado PDF
+            doc.setFillColor(30, 41, 59); // Fondo oscuro header
+            doc.rect(0, 0, 210, 40, 'F');
             doc.setFontSize(22);
-            doc.setTextColor(41, 128, 185); // Azul
-            doc.text("Reporte de Proyección Financiera", 14, 20);
-
+            doc.setTextColor(255, 255, 255);
+            doc.text("Reporte de Inversión", 14, 20);
             doc.setFontSize(10);
-            doc.setTextColor(100);
-            doc.text(`Generado el: ${new Date().toLocaleDateString()}`, 14, 26);
+            doc.setTextColor(209, 213, 219);
+            doc.text(`Generado: ${new Date().toLocaleDateString()}`, 14, 28);
 
-            // Resumen Ejecutivo
-            doc.setFillColor(240, 240, 240);
-            doc.rect(14, 35, 180, 25, 'F');
-            
+            // Resumen KPI
+            doc.setTextColor(0, 0, 0);
             doc.setFontSize(12);
-            doc.setTextColor(0);
-            doc.text("Resumen de Estrategia:", 20, 45);
-            
-            doc.setFontSize(10);
-            doc.text(`Aporte Mensual Ini: ${USD.format(document.getElementById('monthlyContrib').value)}`, 20, 52);
-            doc.text(`Aporte Extra Ini: ${USD.format(document.getElementById('extraContrib').value)}`, 80, 52);
-            doc.text(`Duración: ${document.getElementById('years').value} años`, 140, 52);
+            doc.text(`Valor Final Proyectado: ${USD.format(simulationData.finalValue)}`, 14, 55);
+            doc.text(`Capital Total Invertido: ${USD.format(simulationData.finalInvested)}`, 14, 62);
 
-            // Resultados Finales destacados
-            doc.setFontSize(14);
-            doc.setTextColor(39, 174, 96); // Verde
-            doc.text(`Valor Final: ${USD.format(simulationData.finalValue)}`, 20, 75);
-            doc.setTextColor(192, 57, 43); // Rojo oscuro
-            doc.text(`Total Invertido: ${USD.format(simulationData.finalInvested)}`, 110, 75);
-
-            // Tabla de Datos
-            let tableRows = simulationData.labels.map((year, i) => [
-                year,
+            // Tabla
+            const rows = simulationData.labels.map((l, i) => [
+                l, 
                 USD.format(simulationData.investedCurve[i]),
                 USD.format(simulationData.portfolioCurve[i]),
                 USD.format(simulationData.dividendData[i])
             ]);
 
             doc.autoTable({
-                startY: 85,
-                head: [['Año', 'Capital Invertido', 'Valor Portafolio', 'Dividendos (Anual)']],
-                body: tableRows,
+                startY: 70,
+                head: [['Año', 'Aportado', 'Patrimonio', 'Dividendos']],
+                body: rows,
                 theme: 'striped',
-                headStyles: { fillColor: [41, 128, 185] },
-                styles: { fontSize: 10, cellPadding: 3 },
-                columnStyles: {
-                    0: { fontStyle: 'bold' },
-                    2: { fontStyle: 'bold', textColor: [39, 174, 96] }
-                }
+                headStyles: { fillColor: [59, 130, 246] }, // Azul
+                alternateRowStyles: { fillColor: [243, 244, 246] }
             });
 
-            // Pie de página
-            const pageCount = doc.internal.getNumberOfPages();
-            for(let i = 1; i <= pageCount; i++) {
-                doc.setPage(i);
-                doc.setFontSize(8);
-                doc.setTextColor(150);
-                doc.text('Simulador Personal de Froylan - Creado con GitHub Pages', 105, 290, null, null, "center");
-            }
-
-            // Descargar
-            doc.save('Proyeccion_Inversion_Froylan.pdf');
+            doc.save('Simulacion_Financiera.pdf');
         }
 
-        // Inicializar
-        calculate();
-
-        // Escuchar cambios en checkbox para mostrar/ocultar input de incremento
-        document.getElementById('dynamicContrib').addEventListener('change', function() {
-            const group = document.getElementById('increaseGroup');
-            if(this.checked) {
-                group.classList.remove('opacity-50', 'pointer-events-none');
-            } else {
-                group.classList.add('opacity-50', 'pointer-events-none');
-            }
-        });
-
+        // Ejecutar al cargar la página
+        window.onload = function() {
+            calculate();
+        };
     </script>
 </body>
 </html>
